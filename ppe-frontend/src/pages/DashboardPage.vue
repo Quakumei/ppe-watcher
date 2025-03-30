@@ -1,4 +1,4 @@
-<!-- src/pages/Dashboard.vue -->
+<!-- src/pages/DashboardPage.vue -->
 <template>
   <q-page class="q-pa-md">
     <div class="text-h4 q-mb-md">Dashboard</div>
@@ -26,6 +26,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'DashboardPage'
+})
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
@@ -51,4 +54,8 @@ async function loadDashboardData() {
 }
 
 onMounted(loadDashboardData)
+onMounted(() => {
+  console.log('Dashboard mounted')
+  loadDashboardData()
+})
 </script>
