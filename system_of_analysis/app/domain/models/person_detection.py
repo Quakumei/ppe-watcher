@@ -13,7 +13,6 @@ class ViolationType(str, Enum):
 @dataclass
 class PersonDetectionEntity:
     id: Optional[int]
-    detection_event_id: int
     violation: ViolationType
     bbox_x: float
     bbox_y: float

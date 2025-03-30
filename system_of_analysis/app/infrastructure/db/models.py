@@ -1,14 +1,16 @@
-from sqlalchemy import Column, Integer, String, Float, Enum, ForeignKey, BigInteger, Boolean, Text
-from sqlalchemy.orm import relationship
-from .database import Base
 import enum
 
+from sqlalchemy import Column, Integer, String, Float, Enum, ForeignKey, BigInteger, Boolean
+from sqlalchemy.orm import relationship, declarative_base
+
+Base = declarative_base()
 # Violation enum
 class ViolationType(str, enum.Enum):
     none = "none"
     no_helmet = "no_helmet"
     no_vest = "no_vest"
     no_helmet_no_vest = "no_helmet_no_vest"
+
 
 class Camera(Base):
     __tablename__ = "cameras"

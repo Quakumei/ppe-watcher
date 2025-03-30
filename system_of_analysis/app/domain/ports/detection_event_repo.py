@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
-from system_of_analysis.app.domain.models.detection_event import DetectionEventEntity
 from datetime import datetime
+from typing import List, Optional
+
+from system_of_analysis.app.domain.models.detection_event import DetectionEventEntity
 
 
 class DetectionEventRepository(ABC):
@@ -11,7 +12,7 @@ class DetectionEventRepository(ABC):
 
     @abstractmethod
     def get_by_camera_and_range(
-        self, camera_id: int, start: datetime, end: datetime
+            self, camera_id: int, start: datetime, end: datetime
     ) -> List[DetectionEventEntity]:
         pass
 

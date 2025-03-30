@@ -1,17 +1,18 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from system_of_analysis.app.infrastructure.db.database import Base
-from system_of_analysis.app.infrastructure.db import models
-from system_of_analysis.app.infrastructure.db.detection_event_repository_impl import DetectionEventRepositoryImpl
 from system_of_analysis.app.domain.services.add_detection_event import AddDetectionEventUseCase
+
 from system_of_analysis.app.domain.models.detection_event import DetectionEventEntity
 from system_of_analysis.app.domain.models.person_detection import PersonDetectionEntity, ViolationType
+from system_of_analysis.app.infrastructure.db import models
+from system_of_analysis.app.infrastructure.db.database import Base
+from system_of_analysis.app.infrastructure.db.detection_event_repository_impl import DetectionEventRepositoryImpl
 
 # Тестовая база (in-memory SQLite)
 engine = create_engine("sqlite:///:memory:")
 SessionLocal = sessionmaker(bind=engine)
+
 
 @pytest.fixture(scope="function")
 def db():
@@ -20,6 +21,7 @@ def db():
     yield session
     session.close()
     Base.metadata.drop_all(bind=engine)
+
 
 def test_add_detection_event(db):
     # Arrange: добавим камеру

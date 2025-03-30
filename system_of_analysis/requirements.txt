@@ -2,3 +2,5 @@ sqlalchemy
 alembic
 pydantic
 pytest
+fastapi
+uvicorn
