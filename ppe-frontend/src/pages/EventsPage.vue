@@ -31,6 +31,13 @@
         @update:model-value="loadEvents"
       />
       <q-btn
+        color="grey"
+        label="Сбросить фильтры"
+        icon="refresh"
+        class="q-ml-sm"
+        @click="resetFilters"
+      />
+      <q-btn
         color="secondary"
         label="Экспорт в Datumaro"
         icon="download"
@@ -123,6 +130,14 @@ async function loadEvents() {
 
 function goDetail(eventId) {
   router.push(`/events/${eventId}`)
+}
+
+function resetFilters() {
+  selectedCamera.value = null
+  selectedViolation.value = null
+  startDate.value = ''
+  endDate.value = ''
+  loadEvents()
 }
 
 async function exportDatumaro() {
