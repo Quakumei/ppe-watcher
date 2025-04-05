@@ -28,6 +28,13 @@
         type="date"
         @update:model-value="loadEvents"
       />
+      <q-btn
+        color="secondary"
+        label="Экспорт в Datumaro"
+        icon="download"
+        class="q-ml-md"
+        @click="exportDatumaro"
+      />
     </div>
 
     <q-table
@@ -114,6 +121,25 @@ async function loadEvents() {
 
 function goDetail(eventId) {
   router.push(`/events/${eventId}`)
+}
+
+async function exportDatumaro() {
+  try {
+    const params = {}
+    if (selectedCamera.value) params.camera_id = selectedCamera.value
+    if (startDate.value) params.start = startDate.value
+    if (endDate.value) params.end = endDate.value
+
+    const query = new URLSearchParams(params).toString()
+    const url = `http://localhost:8000/api/v1/detections/export/datumaro?${query}`
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'datumaro_export.zip'
+    link.click()
+  } catch (error) {
+    $q.notify({ type: 'negative', message: 'Ошибка экспорта' })
+  }
 }
 
 onMounted(() => {
