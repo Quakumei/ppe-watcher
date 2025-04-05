@@ -17,7 +17,7 @@
       </q-card>
       <q-card class="col">
         <q-card-section>
-          <div class="text-h6">Нарушений за период</div>
+          <div class="text-h6">Нарушений за все время</div>
           <div class="text-subtitle1">{{ eventsPeriod }}</div>
         </q-card-section>
       </q-card>
@@ -44,9 +44,14 @@ async function loadDashboardData() {
     camerasCount.value = cams.data.length
 
     const events = await axios.get('http://localhost:8000/api/v1/detections')
-    // Фильтрация событий за сегодня, за период и т.д.
-    // Здесь просто зададим заглушки:
-    eventsToday.value = events.data.filter(e => true).length
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+
+    eventsToday.value = events.data.filter(e => {
+      const eventDate = new Date(e.timestamp)
+      return eventDate >= todayStart && eventDate < todayEnd
+    }).length
     eventsPeriod.value = events.data.filter(e => true).length
   } catch (error) {
     console.error("Dashboard load error", error)
