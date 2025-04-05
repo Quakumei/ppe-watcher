@@ -42,4 +42,5 @@ def export_datumaro_format(
     end: str | None = None,
     app_service: ApplicationService = Depends(get_application_service)
 ):
+    print(f"camera_id={camera_id}, start={start}, end={end}")
     return app_service.export_datumaro_uc.execute(camera_id=camera_id, start=start, end=end)

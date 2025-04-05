@@ -81,3 +81,4 @@ def map_detection_event_entity_to_out(event: DetectionEventEntity) -> DetectionE
         image_url=event.image_url,
         persons=persons
     )
+

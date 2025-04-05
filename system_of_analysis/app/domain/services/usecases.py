@@ -1,3 +1,5 @@
+# Файл: app/domain/services/usecases.py
+
 from datetime import datetime
 from typing import List, Optional
 import json
@@ -71,8 +73,9 @@ class ListDetectionEventsUseCase:
     def __init__(self, detection_event_repo: DetectionEventRepository):
         self.detection_event_repo = detection_event_repo
 
-    def execute(self, camera_id: Optional[int] = None, start: Optional[str] = None, end: Optional[str] = None) -> List[
-        DetectionEventEntity]:
+    def execute(
+        self, camera_id: Optional[int] = None, start: Optional[str] = None, end: Optional[str] = None
+    ) -> List[DetectionEventEntity]:
         # Если заданы фильтры, используем get_by_camera_and_range
         if camera_id and start and end:
             start_dt = datetime.fromisoformat(start)
@@ -87,7 +90,11 @@ class ExportDatumaroUseCase:
     def __init__(self, detection_repo: DetectionEventRepository):
         self.detection_repo = detection_repo
 
-    def execute(self, camera_id: Optional[int], start: Optional[str], end: Optional[str]) -> FileResponse:
+    def execute(
+        self, camera_id: Optional[int], start: Optional[str], end: Optional[str]
+    ) -> FileResponse:
+        # Фильтрация: если заданы все параметры, отбираем события по камере и времени,
+        # иначе – экспортируем все события.
         if camera_id and start and end:
             start_dt = datetime.fromisoformat(start)
             end_dt = datetime.fromisoformat(end)
@@ -95,6 +102,7 @@ class ExportDatumaroUseCase:
         else:
             events = self.detection_repo.list_events()
 
+        # Определяем категории нарушений
         category_map = {
             "none": 0,
             "no_helmet": 1,
@@ -104,36 +112,45 @@ class ExportDatumaroUseCase:
 
         images, annotations = [], []
         ann_id = 1
+
+        # Для примера фиксированные размеры изображения – их можно заменить динамическими, если такие данные имеются
+        fixed_width, fixed_height = 1920, 1080
+
         for i, event in enumerate(events):
             image_id = i + 1
             images.append({
                 "id": image_id,
                 "file_name": os.path.basename(event.image_url),
-                "width": 1920,
-                "height": 1080
+                "width": fixed_width,
+                "height": fixed_height
             })
             for person in event.persons:
                 annotations.append({
                     "id": ann_id,
                     "image_id": image_id,
                     "bbox": [
-                        person.bbox_x * 1920,
-                        person.bbox_y * 1080,
-                        person.bbox_width * 1920,
-                        person.bbox_height * 1080
+                        person.bbox_x * fixed_width,
+                        person.bbox_y * fixed_height,
+                        person.bbox_width * fixed_width,
+                        person.bbox_height * fixed_height
                     ],
                     "category_id": category_map[person.violation.value],
-                    "area": person.bbox_width * person.bbox_height * 1920 * 1080,
-                    "iscrowd": 0
+                    "area": person.bbox_width * person.bbox_height * fixed_width * fixed_height,
+                    "iscrowd": 0,
+                    "attributes": {
+                        "violation": person.violation.value
+                    }
                 })
                 ann_id += 1
 
         temp_dir = tempfile.mkdtemp()
-        ann_dir = os.path.join(temp_dir, "dataset", "annotations")
-        img_dir = os.path.join(temp_dir, "dataset", "images")
+        dataset_dir = os.path.join(temp_dir, "dataset")
+        ann_dir = os.path.join(dataset_dir, "annotations")
+        img_dir = os.path.join(dataset_dir, "images")
         os.makedirs(ann_dir)
         os.makedirs(img_dir)
 
+        # Формирование файла с аннотациями
         with open(os.path.join(ann_dir, "instances_default.json"), "w", encoding="utf-8") as f:
             json.dump({
                 "images": images,
@@ -142,12 +159,14 @@ class ExportDatumaroUseCase:
                 "info": {}
             }, f, ensure_ascii=False, indent=2)
 
-        with open(os.path.join(temp_dir, "dataset", "dataset_meta.json"), "w") as f:
+        # Дополнительная мета-информация о датасете
+        with open(os.path.join(dataset_dir, "dataset_meta.json"), "w") as f:
             json.dump({"categories": list(category_map.keys())}, f)
 
+        # Упаковка датасета в zip-архив
         zip_path = os.path.join(temp_dir, "datumaro_export.zip")
         with zipfile.ZipFile(zip_path, "w") as zipf:
-            for folder, _, files in os.walk(os.path.join(temp_dir, "dataset")):
+            for folder, _, files in os.walk(dataset_dir):
                 for file in files:
                     full_path = os.path.join(folder, file)
                     arcname = os.path.relpath(full_path, temp_dir)

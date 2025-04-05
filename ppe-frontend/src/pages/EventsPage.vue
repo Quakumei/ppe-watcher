@@ -8,6 +8,8 @@
         v-model="selectedCamera"
         :options="cameraOptions"
         label="Камера"
+        emit-value
+        map-options
         @update:model-value="loadEvents"
       />
       <q-select
@@ -137,6 +139,7 @@ async function exportDatumaro() {
     link.href = url
     link.download = 'datumaro_export.zip'
     link.click()
+    console.log("params:", params)
   } catch (error) {
     $q.notify({ type: 'negative', message: 'Ошибка экспорта' })
   }

@@ -73,12 +73,11 @@ class DetectionEventRepositoryImpl(DetectionEventRepository):
                     # fallback на ISO, если вдруг так
                     raw_ts_dt = datetime.fromisoformat(raw_ts)
                 timestamp_ = raw_ts_dt
-            # Если это уже datetime — всё ок
             elif isinstance(raw_ts, datetime):
                 timestamp_ = raw_ts
             # Если число (int/float) — переводим из миллисекунд
             else:
-                timestamp = datetime.fromtimestamp(raw_ts / 1000)
+                timestamp_ = datetime.fromtimestamp(raw_ts / 1000)
             result.append(
                 DetectionEventEntity(
                     id=e.id,
@@ -141,11 +140,17 @@ class DetectionEventRepositoryImpl(DetectionEventRepository):
                 )
                 for p in e.person_detections
             ]
+            timestamp = (
+                datetime.fromtimestamp(e.timestamp / 1000)
+                if isinstance(e.timestamp, (int, float))
+                else e.timestamp
+            )
+
             result.append(
                 DetectionEventEntity(
                     id=e.id,
                     camera_id=e.camera_id,
-                    timestamp=e.timestamp,
+                    timestamp=timestamp,
                     image_url=e.image_url,
                     persons=person_entities
                 )
