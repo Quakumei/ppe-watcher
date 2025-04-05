@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-
+from fastapi.responses import FileResponse
 from app.domain.services.usecases import get_application_service, ApplicationService
 from app.presentation.api.mappers import map_detection_event_in_to_entity, map_detection_event_entity_to_out
 from app.presentation.api.schemas.detection_event import DetectionEventIn, DetectionEventOut
@@ -33,3 +33,13 @@ def get_detection_event(event_id: int, app_service: ApplicationService = Depends
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return map_detection_event_entity_to_out(event)
+
+
+@router.get("/export/datumaro", response_class=FileResponse)
+def export_datumaro_format(
+    camera_id: int | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    app_service: ApplicationService = Depends(get_application_service)
+):
+    return app_service.export_datumaro_uc.execute(camera_id=camera_id, start=start, end=end)

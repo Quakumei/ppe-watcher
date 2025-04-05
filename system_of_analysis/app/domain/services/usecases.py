@@ -1,7 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
-
+import json
+import tempfile
+import zipfile
+import os
 from fastapi import Depends
+from fastapi.responses import FileResponse
 
 from app.domain.models.camera import CameraEntity
 from app.domain.models.detection_event import DetectionEventEntity
@@ -76,3 +80,76 @@ class ListDetectionEventsUseCase:
         else:
             # Иначе возвращаем все события (предполагается, что репозиторий имеет list_events)
             return self.detection_event_repo.list_events()
+
+
+class ExportDatumaroUseCase:
+    def __init__(self, detection_repo: DetectionEventRepository):
+        self.detection_repo = detection_repo
+
+    def execute(self, camera_id: Optional[int], start: Optional[str], end: Optional[str]) -> FileResponse:
+        if camera_id and start and end:
+            start_dt = datetime.fromisoformat(start)
+            end_dt = datetime.fromisoformat(end)
+            events = self.detection_repo.get_by_camera_and_range(camera_id, start_dt, end_dt)
+        else:
+            events = self.detection_repo.list_events()
+
+        category_map = {
+            "none": 0,
+            "no_helmet": 1,
+            "no_vest": 2,
+            "no_helmet_no_vest": 3,
+        }
+
+        images, annotations = [], []
+        ann_id = 1
+        for i, event in enumerate(events):
+            image_id = i + 1
+            images.append({
+                "id": image_id,
+                "file_name": os.path.basename(event.image_url),
+                "width": 1920,
+                "height": 1080
+            })
+            for person in event.persons:
+                annotations.append({
+                    "id": ann_id,
+                    "image_id": image_id,
+                    "bbox": [
+                        person.bbox_x * 1920,
+                        person.bbox_y * 1080,
+                        person.bbox_width * 1920,
+                        person.bbox_height * 1080
+                    ],
+                    "category_id": category_map[person.violation.value],
+                    "area": person.bbox_width * person.bbox_height * 1920 * 1080,
+                    "iscrowd": 0
+                })
+                ann_id += 1
+
+        temp_dir = tempfile.mkdtemp()
+        ann_dir = os.path.join(temp_dir, "dataset", "annotations")
+        img_dir = os.path.join(temp_dir, "dataset", "images")
+        os.makedirs(ann_dir)
+        os.makedirs(img_dir)
+
+        with open(os.path.join(ann_dir, "instances_default.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "images": images,
+                "annotations": annotations,
+                "categories": [{"id": v, "name": k} for k, v in category_map.items()],
+                "info": {}
+            }, f, ensure_ascii=False, indent=2)
+
+        with open(os.path.join(temp_dir, "dataset", "dataset_meta.json"), "w") as f:
+            json.dump({"categories": list(category_map.keys())}, f)
+
+        zip_path = os.path.join(temp_dir, "datumaro_export.zip")
+        with zipfile.ZipFile(zip_path, "w") as zipf:
+            for folder, _, files in os.walk(os.path.join(temp_dir, "dataset")):
+                for file in files:
+                    full_path = os.path.join(folder, file)
+                    arcname = os.path.relpath(full_path, temp_dir)
+                    zipf.write(full_path, arcname)
+
+        return FileResponse(zip_path, filename="datumaro_export.zip", media_type="application/zip")
