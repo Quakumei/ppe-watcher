@@ -32,6 +32,7 @@ class ApplicationService:
         self.list_cameras_uc = ListCamerasUseCase(camera_repo)
         self.add_detection_event_uc = AddDetectionEventUseCase(detection_repo)
         self.list_detection_events_uc = ListDetectionEventsUseCase(detection_repo)
+        self.export_datumaro_uc = ExportDatumaroUseCase(detection_repo)
 
 
 def get_application_service(db=Depends(get_db)) -> ApplicationService:
