@@ -17,3 +17,7 @@ class CameraRepository(ABC):
     def create(self, camera: CameraEntity) -> CameraEntity:
         pass
 
+    @abstractmethod
+    def delete(self, camera_id: int) -> None:
+        pass
+

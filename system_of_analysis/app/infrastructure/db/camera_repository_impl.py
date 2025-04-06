@@ -51,3 +51,10 @@ class CameraRepositoryImpl:
             location=c.location,
             is_active=c.is_active
         )
+
+    def delete(self, camera_id: int) -> None:
+        cam = self.db.query(Camera).filter_by(id=camera_id).first()
+        if cam:
+            self.db.delete(cam)
+            self.db.commit()
+
