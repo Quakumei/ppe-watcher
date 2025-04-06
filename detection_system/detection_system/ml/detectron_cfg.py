@@ -25,7 +25,6 @@ def configure_cfg(
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file(config_file))
 
-    output_dir = str(output_dir)
     data_len = sum([len(DatasetCatalog.get(ds)) for ds in train_datasets])
     batches_per_epoch = data_len / batch_size
     max_iter = int(epochs * batches_per_epoch) + cfg.SOLVER.WARMUP_ITERS
@@ -41,6 +40,7 @@ def configure_cfg(
         config_file
     )  # Let training initialize from model zoo
     if output_dir:
+        output_dir = str(output_dir)
         cfg.OUTPUT_DIR = output_dir
 
     # Data

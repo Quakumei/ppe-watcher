@@ -13,7 +13,6 @@ class AbstractMessageSender(ABC):
     async def send(message: Message) -> None:
         ...
 
-
 class SimplePikaMessageSender(AbstractMessageSender):
     def __init__(
         self,

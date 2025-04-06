@@ -18,6 +18,7 @@ def configure_cfg(
     eval_period_epochs: float = 1,
     model_weights_path: Optional[Path] = None,
     output_dir: Optional[str] = None,
+    solver_steps: List[int] = []
 ):
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file(config_file))
@@ -48,7 +49,7 @@ def configure_cfg(
     # Optimization
     cfg.SOLVER.IMS_PER_BATCH = batch_size  # This is the real "batch size" commonly known to deep learning people
     cfg.SOLVER.BASE_LR = base_lr
-    cfg.SOLVER.STEPS = []
+    cfg.SOLVER.STEPS = solver_steps
     cfg.SOLVER.MAX_ITER = max_iter
 
     # Other
