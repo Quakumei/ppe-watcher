@@ -30,3 +30,10 @@ def get_camera(camera_id: int, app_service: ApplicationService = Depends(get_app
         if cam.id == camera_id:
             return map_camera_entity_to_out(cam)
     raise HTTPException(status_code=404, detail="Camera not found")
+
+
+@router.delete("/{camera_id}")
+def delete_camera(camera_id: int, app_service: ApplicationService = Depends(get_application_service)):
+    app_service.delete_camera_uc.execute(camera_id)
+    return {"detail": f"Камера {camera_id} удалена"}
+

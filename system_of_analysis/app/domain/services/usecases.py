@@ -31,6 +31,7 @@ class ApplicationService:
         detection_repo = DetectionEventRepositoryImpl(db)
         # Инициализируем use-case‑ы
         self.create_camera_uc = CreateCameraUseCase(camera_repo)
+        self.delete_camera_uc = DeleteCameraUseCase(camera_repo)
         self.list_cameras_uc = ListCamerasUseCase(camera_repo)
         self.add_detection_event_uc = AddDetectionEventUseCase(detection_repo)
         self.list_detection_events_uc = ListDetectionEventsUseCase(detection_repo)
@@ -173,3 +174,12 @@ class ExportDatumaroUseCase:
                     zipf.write(full_path, arcname)
 
         return FileResponse(zip_path, filename="datumaro_export.zip", media_type="application/zip")
+
+
+class DeleteCameraUseCase:
+    def __init__(self, camera_repo: CameraRepository):
+        self.camera_repo = camera_repo
+
+    def execute(self, camera_id: int) -> None:
+        self.camera_repo.delete(camera_id)
+
