@@ -8,10 +8,12 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
-RUN touch README.md
+COPY pyproject.toml poetry.lock README.md ./
+
 RUN poetry install --without dev --no-root --no-interaction --no-ansi && rm -rf $POETRY_CACHE_DIR
+RUN pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
 COPY . /app/
+
 
 CMD [ "poetry", "run", "python3", "-m", "detection_system.main" ]

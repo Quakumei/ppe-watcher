@@ -4,15 +4,53 @@ from typing import Optional
 
 import aio_pika
 
+from ..utils.logging import logger
 from ..models.message import Message
+
 
 class AbstractMessageSender(ABC):
     @abstractmethod
     async def send(message: Message) -> None:
         ...
 
+
+class SimplePikaMessageSender(AbstractMessageSender):
+    def __init__(
+        self,
+        connection_string: str = "amqp://guest:guest@127.0.0.1/",
+        routing_key: str = "event_queue",
+    ):
+        self.connection_string = connection_string
+        self.routing_key = routing_key
+        self.connection: Optional[aio_pika.RobustConnection] = None
+
+    async def _init_connection(self) -> None:
+        if self.connection is None:
+            self.connection = await aio_pika.connect_robust(self.connection_string)
+            logger.info("Connection to RMQ is success")
+
+    async def start(self) -> None:
+        await self._init_connection()
+
+    async def send(self, message: Message) -> None:
+        await self._init_connection()
+        serialized: str = message.data.model_dump_json()
+        async with self.connection as connection:
+            channel = await connection.channel()
+            await channel.default_exchange.publish(
+                aio_pika.Message(body=serialized.encode()),
+                routing_key=self.routing_key,
+            )
+            logger.info("Sent message successfully")
+        self.connection = None
+
+
 class PikaMessageSender(AbstractMessageSender):
-    def __init__(self, connection_string: str = "amqp://guest:guest@127.0.0.1/", routing_key: str = "event_queue"):
+    def __init__(
+        self,
+        connection_string: str = "amqp://guest:guest@127.0.0.1/",
+        routing_key: str = "event_queue",
+    ):
         self.connection_string = connection_string
         self.routing_key = routing_key
         self.connection: Optional[aio_pika.RobustConnection] = None
@@ -23,6 +61,7 @@ class PikaMessageSender(AbstractMessageSender):
     async def _init_connection(self) -> None:
         if self.connection is None:
             self.connection = await aio_pika.connect_robust(self.connection_string)
+            print("connection is success")
 
     async def _process_queue(self) -> None:
         await self._init_connection()
@@ -35,6 +74,8 @@ class PikaMessageSender(AbstractMessageSender):
                     routing_key=self.routing_key,
                 )
                 self.queue.task_done()
+                logger.info("Sent message to queue")
+                print("sent message to queue")
 
     async def start(self) -> None:
         if not self._running:

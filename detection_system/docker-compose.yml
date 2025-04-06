@@ -1,15 +1,26 @@
 services:
-  # rtsp-server:
-  #   image: bluenviron/mediamtx:latest
-  #   container_name: rtsp-server
-  #   ports:
-  #     - "8554:8554"      # RTSP port
-  #     - "1935:1935"      # RTMP port (optional)
-  #     - "8888:8888"      # HTTP stream (optional)
-  #   volumes:
-  #     - ./mediamtx.yml:/mediamtx.yml
-  #     - ./data/cam_videos:/videos
-  #   restart: unless-stopped
+  rtsp-server:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-server
+    ports:
+      - "8554:8554"      # RTSP port
+      - "1935:1935"      # RTMP port (optional)
+      - "8888:8888"      # HTTP stream (optional)
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+      - ./data/cam_videos:/videos:ro
+    restart: unless-stopped
+
+  ffmpeg-streamer:
+    image: jrottenberg/ffmpeg:7.1-scratch
+    depends_on:
+      - rtsp-server
+    volumes:
+      - ./data/cam_videos:/videos:ro
+    command: >
+      -re -stream_loop -1 -i /videos/1.mp4
+      -c copy -f rtsp rtsp://rtsp-server:8554/cam
+    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3.11-management
@@ -25,12 +36,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-
-  detection:
-    build: .
-    container_name: detection
-    environment:
-      PIKA_ROUTING_KEY: ${PIKA_ROUTING_KEY}
-      PIKA_USER: ${PIKA_USER}
-      PIKA_PASS: ${PIKA_PASS}
-      PIKA_HOST: rabbitmq

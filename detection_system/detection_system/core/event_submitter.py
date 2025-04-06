@@ -5,4 +5,5 @@ from ..models.event import ViolationPPEEvent
 
 class AbstractEventSubmitter(ABC):
     @abstractmethod
-    def submit(event: ViolationPPEEvent) -> None: ...
+    def submit(event: ViolationPPEEvent) -> None:
+        ...
