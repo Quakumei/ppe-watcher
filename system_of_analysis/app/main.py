@@ -4,6 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.infrastructure.db.database import init_db
 from app.presentation.api import cameras, detection_events, proxy
+from app.infrastructure.rabbitmq_client import run_rabbitmq_listener_in_background
 
 app = FastAPI(title="PPE Safety Monitoring API", version="1.0.0")
 
@@ -11,6 +12,8 @@ app = FastAPI(title="PPE Safety Monitoring API", version="1.0.0")
 @app.on_event("startup")
 def on_startup():
     init_db()
+    # Запускаем RabbitMQ подписчика
+    run_rabbitmq_listener_in_background(app)
 
 
 app.add_middleware(
