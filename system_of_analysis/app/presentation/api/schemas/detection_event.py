@@ -21,7 +21,7 @@ class PersonDetection(BaseModel):
 
 class DetectionEventIn(BaseModel):
     camera_id: int
-    timestamp: str  # ISO-формат datetime, либо число, если договоримся о Unix-мсек
+    timestamp: str
     image_url: str
     persons: List[PersonDetection]
 
