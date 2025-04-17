@@ -14,6 +14,7 @@ from detectron2.data.datasets import register_coco_instances
 def unregister_if_exists(ds_name):
     if ds_name in DatasetCatalog.list():
         DatasetCatalog.remove(ds_name)
+    if ds_name in MetadataCatalog.list():
         MetadataCatalog.remove(ds_name)
 
 
@@ -52,13 +53,13 @@ def visualize_ds(
     return samples
 
 
-def infer_sample(predictor, sample, ds_metadata) -> None:
+def infer_sample(predictor, sample, ds_metadata, color_mode: tp.Optional[ColorMode] = None, scale = None) -> None:
     image = cv2.imread(sample["file_name"])
     visualizer = Visualizer(
         image[:, :, ::-1],
         metadata=ds_metadata,
-        scale=0.3,
-        instance_mode=ColorMode.IMAGE_BW,
+        scale=scale or 0.3,
+        instance_mode=color_mode or ColorMode.IMAGE_BW,
     )
     prediction = predictor(image)
     out = visualizer.draw_instance_predictions(prediction["instances"].to("cpu"))
@@ -68,10 +69,10 @@ def infer_sample(predictor, sample, ds_metadata) -> None:
     return prediction
 
 
-def infer_ds(predictor, ds, ds_metadata, n=10) -> tp.List[dict]:
+def infer_ds(predictor, ds, ds_metadata, n=10, color_mode: tp.Optional[ColorMode] = None, scale = None) -> tp.List[dict]:
     samples = random.sample(ds, n)
     predictions = []
     for sample in samples:
-        prediction = infer_sample(predictor, sample, ds_metadata)
+        prediction = infer_sample(predictor, sample, ds_metadata, color_mode, scale)
         predictions.append(prediction)
     return samples, predictions
