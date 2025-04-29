@@ -1,0 +1,5 @@
+paths:
+  cam:
+    source: publisher
+  all_others:
+
